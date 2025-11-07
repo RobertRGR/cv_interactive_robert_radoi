@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Portfolio - Rădoi Gheorghe Robert</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Warm Neutrals & Muted Blue -->
+    <!-- Application Structure Plan: I chose an SPA structure with main navigation (Home, Career, Skills, Certifications) that toggles section visibility. This is superior to a static CV, allowing the user to explore interactively. The "Home" section uses a radar chart to visualize the candidate's "hybrid" profile. The "Career Path" section uses an interactive vertical timeline (click-to-expand) to present job details and, crucially, the analyzed "transferable skills," effectively narrating the career evolution story. -->
+    <!-- Visualization & Content Choices: CV Data -> Goal: Show the hybrid profile -> Viz: Radar Chart (Chart.js) -> Interaction: N/A (static viz) -> Justification: A radar chart is excellent for visualizing strengths across multiple categories simultaneously. CV Experience -> Goal: Show career evolution and transferable skills -> Viz: Vertical Timeline (HTML/CSS) -> Interaction: Click on job title to expand/collapse details -> Justification: Allows the user to focus only on roles of interest, without being overwhelmed by text, and highlights the strategic analysis of each role. Skills/Certs -> Goal: Clear presentation -> Viz: Cards (HTML/Tailwind) -> Interaction: N/A (static) -> Justification: A clean, modern way to group information. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .nav-button {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .nav-button.active {
+            background-color: #1d4ed8; /* bg-blue-700 */
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .nav-button:not(.active):hover {
+            background-color: #e0e7ff; /* bg-indigo-100 */
+        }
+        .content-section {
+            display: none; /* Hidden by default */
+        }
+        .content-section.active {
+            display: block; /* Shown when active */
+        }
+        .timeline-dot {
+            position: absolute;
+            left: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #1d4ed8; /* bg-blue-700 */
+            border: 4px solid #f3f4f6; /* bg-gray-100 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 leading-relaxed">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-6xl">
+
+        <!-- Header and Title -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-blue-800 mb-2">Rădoi Gheorghe Robert</h1>
+            <p class="text-xl text-gray-600">Interactive Career Portfolio</p>
+            <p class="text-md text-gray-500 mt-2">QA Tester | Process Developer | Product Specialist</p>
+        </header>
+
+        <!-- Main Navigation -->
+        <nav class="flex flex-wrap justify-center gap-2 md:gap-4 mb-8">
+            <button class="nav-button active py-2 px-4 rounded-lg font-semibold text-gray-700" onclick="showSection('home', this)">Home</button>
+            <button class="nav-button py-2 px-4 rounded-lg font-semibold text-gray-700" onclick="showSection('career', this)">Career Path</button>
+            <button class="nav-button py-2 px-4 rounded-lg font-semibold text-gray-700" onclick="showSection('skills', this)">Skills</button>
+            <button class="nav-button py-2 px-4 rounded-lg font-semibold text-gray-700" onclick="showSection('certs', this)">Certifications</button>
+            <button class="nav-button py-2 px-4 rounded-lg font-semibold text-gray-700" onclick="showSection('education', this)">Education</button>
+        </nav>
+
+        <!-- Main Content Container -->
+        <main>
+            <!-- Section 1: Home -->
+            <section id="home" class="content-section active">
+                <div class="bg-white p-6 md:p-8 rounded-xl shadow-md">
+                    <h2 class="text-3xl font-bold text-blue-800 mb-4">Hybrid Profile: The Bridge Between Client and Code</h2>
+                    <p class="text-lg text-gray-700 mb-6">
+                        I am a motivated QA professional with recent experience in functional game testing. I possess a solid understanding of the Software Development Life Cycle (SDLC) and testing methodologies, including functional, regression, and security testing. What sets me apart is my **hybrid profile**: I combine the technical rigor of QA with practical experience in e-commerce operations and a deep understanding of customer needs, gained in sales and product management roles.
+                    </p>
+                    <p class="text-lg text-gray-700 mb-8">
+                        This radar chart illustrates how my competencies intersect, creating a unique profile capable of ensuring quality not only from a technical perspective but also from the end-user experience standpoint.
+                    </p>
+                    <div class="chart-container">
+                        <canvas id="skillsRadarChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 2: Career Path -->
+            <section id="career" class="content-section">
+                <div class="bg-white p-6 md:p-8 rounded-xl shadow-md">
+                    <h2 class="text-3xl font-bold text-blue-800 mb-4">Career Path</h2>
+                    <p class="text-lg text-gray-700 mb-8">
+                        My career is a story of evolution and adaptation, starting from understanding the customer and business operations, and leading to the technical discipline of quality assurance. Click on each role to view details and, most importantly, the transferable skills acquired.
+                    </p>
+                    
+                    <!-- Vertical Timeline -->
+                    <div class="relative pl-8 border-l-4 border-blue-700">
+
+                        <!-- Job 1: QA Tester -->
+                        <div class="mb-12 relative">
+                            <span class="timeline-dot"></span>
+                            <h3 class="text-xl md:text-2xl font-semibold text-blue-800 cursor-pointer hover:text-blue-600" onclick="toggleDetails('job-qa')">
+                                QA Tester - Testronic
+                            </h3>
+                            <p class="text-gray-500 font-medium">October 2023 - November 2025</p>
+                            <div id="job-qa" class="hidden mt-4 text-gray-700 bg-gray-50 p-4 rounded-lg border">
+                                <p class="font-semibold">Key Responsibilities:</p>
+                                <ul class="list-disc list-outside ml-5 space-y-1 mt-2">
+                                    <li>Performed functional testing of games on various platforms.</li>
+                                    <li>Identified and reported detailed defects (bugs).</li>
+                                    <li>Utilized test management tools (JIRA, Confluence, TestRail, TestPad).</li>
+                                    <li>Ensured product quality through rigorous execution of regression testing.</li>
+                                </ul>
+                                <hr class="my-4">
+                                <p class="font-semibold text-blue-700">Transferable Skills Analysis:</p>
+                                <p class="mt-2">Formalization of "attention to detail" discipline into a technical methodology (STLC). Transitioned from preventing operational errors (e-commerce) to systematic software defect identification.</p>
+                            </div>
+                        </div>
+
+                        <!-- Job 2: Personal Project -->
+                        <div class="mb-12 relative">
+                            <span class="timeline-dot"></span>
+                            <h3 class="text-xl md:text-2xl font-semibold text-blue-800 cursor-pointer hover:text-blue-600" onclick="toggleDetails('job-proiect')">
+                                Personal Project - Reddish Plant Group SRL
+                            </h3>
+                            <p class="text-gray-500 font-medium">2023 - Ongoing</p>
+                            <div id="job-proiect" class="hidden mt-4 text-gray-700 bg-gray-50 p-4 rounded-lg border">
+                                <p class="font-semibold">Description:</p>
+                                <ul class="list-disc list-outside ml-5 space-y-1 mt-2">
+                                    <li>Involved in the development and establishment of a personal project: a 2-hectare Goji berry shrub plantation.</li>
+                                </ul>
+                                <hr class="my-4">
+                                <p class="font-semibold text-blue-700">Transferable Skills Analysis:</p>
+                                <p class="mt-2">Demonstrates **Project Management** abilities, long-term planning, budgeting, resource management, and autonomous execution.</p>
+                            </div>
+                        </div>
+
+                        <!-- Job 3: Promoter, Sales -->
+                        <div class="mb-12 relative">
+                            <span class="timeline-dot"></span>
+                            <h3 class="text-xl md:text-2xl font-semibold text-blue-800 cursor-pointer hover:text-blue-600" onclick="toggleDetails('job-sony')">
+                                Promoter, Sales - Sony, Bucharest
+                            </h3>
+                            <p class="text-gray-500 font-medium">May 2017 - December 2022</p>
+                            <div id="job-sony" class="hidden mt-4 text-gray-700 bg-gray-50 p-4 rounded-lg border">
+                                <p class="font-semibold">Key Responsibilities:</p>
+                                <ul class="list-disc list-outside ml-5 space-y-1 mt-2">
+                                    <li>Directly interacted with customers and promoted Sony products in specialty stores.</li>
+                                    <li>Involved in the sales process and implemented offers and prices.</li>
+                                </ul>
+                                <hr class="my-4">
+                                <p class="font-semibold text-blue-700">Transferable Skills Analysis:</p>
+                                <p class="mt-2">Developed **customer empathy** and communication skills. Deep understanding of how an end-user perceives a product, essential for writing relevant test cases.</p>
+                            </div>
+                        </div>
+
+                        <!-- Job 4: Computer Operator -->
+                        <div class="mb-12 relative">
+                            <span class="timeline-dot"></span>
+                            <h3 class="text-xl md:text-2xl font-semibold text-blue-800 cursor-pointer hover:text-blue-600" onclick="toggleDetails('job-cel')">
+                                Computer Operator/Product Manager - Corsar Online, cel.ro
+                            </h3>
+                            <p class="text-gray-500 font-medium">January 2014 - July 2015</p>
+                            <div id="job-cel" class="hidden mt-4 text-gray-700 bg-gray-50 p-4 rounded-lg border">
+                                <p class="font-semibold">Key Responsibilities:</p>
+                                <ul class="list-disc list-outside ml-5 space-y-1 mt-2">
+                                    <li>Carried out prospecting and product listing on the website, including specific item codes.</li>
+                                    <li>Implemented prices and promotions in collaboration with IT suppliers.</li>
+                                    <li>Checked and edited product images.</li>
+                                </ul>
+                                <hr class="my-4">
+                                <p class="font-semibold text-blue-700">Transferable Skills Analysis:</p>
+                                <p class="mt-2">Developed **meticulous attention to detail** and **data integrity**. Served as a "bridge" between business requirements and technical execution (IT), a key skill in QA and Business Analysis.</p>
+                            </div>
+                        </div>
+
+                        <!-- Job 5: Internship -->
+                        <div class="relative">
+                            <span class="timeline-dot"></span>
+                            <h3 class="text-xl md:text-2xl font-semibold text-blue-800 cursor-pointer hover:text-blue-600" onclick="toggleDetails('job-intern')">
+                                Junior Account Manager - Internship - Power Net Consulting
+                            </h3>
+                            <p class="text-gray-500 font-medium">August 2013 - November 2013</p>
+                            <div id="job-intern" class="hidden mt-4 text-gray-700 bg-gray-50 p-4 rounded-lg border">
+                                <p class="font-semibold">Key Responsibilities:</p>
+                                <ul class="list-disc list-outside ml-5 space-y-1 mt-2">
+                                    <li>Analyzed customer needs and prepared offers.</li>
+                                    <li>Collaborated directly with the end customer to implement the best option, based on identified needs.</li>
+                                </ul>
+                                <hr class="my-4">
+                                <p class="font-semibold text-blue-700">Transferable Skills Analysis:</p>
+                                <p class="mt-2">Foundation in **requirements analysis** and stakeholder communication, essential for understanding what needs to be tested.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 3: Skills -->
+            <section id="skills" class="content-section">
+                <div class="bg-white p-6 md:p-8 rounded-xl shadow-md">
+                    <h2 class="text-3xl font-bold text-blue-800 mb-4">Technical and Key Skills</h2>
+                    <p class="text-lg text-gray-700 mb-8">
+                        A breakdown of the tools, methodologies, and concepts I master, demonstrating a solid foundation for technical and hybrid roles.
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Card 1: Testing -->
+                        <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
+                            <h3 class="text-xl font-bold text-blue-800 mb-3">Testing & Methodologies</h3>
+                            <ul class="space-y-2 text-gray-700">
+                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Manual Testing</li>
+                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Functional Testing</li>
+                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Regression Testing</li>
+                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Security Testing</li>
+                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Quality Assurance (QA)</li>
+                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Software Testing Life Cycle (STLC)</li>
+                            </ul>
+                        </div>
+                        <!-- Card 2: Tools -->
+                        <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
+                            <h3 class="text-xl font-bold text-blue-800 mb-3">Tools</h3>
+                            <ul class="space-y-2 text-gray-700">
+                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>JIRA</li>
+                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>TestRail</li>
+                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>TestPad</li>
+                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Confluence</li>
+                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Selenium (Knowledge)</li>
+                            </ul>
+                        </div>
+                        <!-- Card 3: Technologies & Concepts -->
+                        <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
+                            <h3 class="text-xl font-bold text-blue-800 mb-3">Technologies & Concepts</h3>
+                            <ul class="space-y-2 text-gray-700">
+                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Python</li>
+                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>JavaScript (JS)</li>
+                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>HTML & CSS</li>
+                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Linux</li>
+                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Project Management</li>
+                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>DevOps & Cloud (Concepts)</li>
+                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Scrum</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 4: Certifications -->
+            <section id="certs" class="content-section">
+                <div class="bg-white p-6 md:p-8 rounded-xl shadow-md">
+                    <h2 class="text-3xl font-bold text-blue-800 mb-4">Licenses and Certifications</h2>
+                    <p class="text-lg text-gray-700 mb-8">
+                        Demonstrating my commitment to continuous learning and the strategic pivot toward a career in technology and quality assurance.
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                            <h3 class="text-xl font-semibold text-blue-800">Fundamentals of Software Testing</h3>
+                            <p class="text-gray-600">Telecom Academy România</p>
+                            <p class="text-gray-500 font-medium mt-2">June 2023</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                            <h3 class="text-xl font-semibold text-blue-800">IBM DevOps, Cloud, and Agile Foundations Specialization</h3>
+                            <p class="text-gray-600">IBM (Coursera)</p>
+                            <p class="text-gray-500 font-medium mt-2">June 2023</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                            <h3 class="text-xl font-semibold text-blue-800">IBM Web Development Fundamentals</h3>
+                            <p class="text-gray-600">IBM (Coursera)</p>
+                            <p class="text-gray-500 font-medium mt-2">April 2023</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                            <h3 class="text-xl font-semibold text-blue-800">Google Crash Course on Python</h3>
+                            <p class="text-gray-600">Google (Coursera)</p>
+                            <p class="text-gray-500 font-medium mt-2">August 2022</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 5: Education -->
+            <section id="education" class="content-section">
+                <div class="bg-white p-6 md:p-8 rounded-xl shadow-md">
+                    <h2 class="text-3xl font-bold text-blue-800 mb-4">Education</h2>
+                    <p class="text-lg text-gray-700 mb-8">
+                        The academic foundation that complements my practical experience.
+                    </p>
+                    <div class="space-y-6">
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                            <h3 class="text-xl font-semibold text-blue-800">Bachelor's Degree (Engineer) - University of Agronomic Sciences and Veterinary Medicine from Bucharest</h3>
+                            <p class="text-gray-600">Specialization: Economic Engineering in Agriculture and Rural Development</p>
+                            <p class="text-gray-500 font-medium mt-2">Graduated: 2020</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                            <h3 class="text-xl font-semibold text-blue-800">High School - National College Anastasescu, Roșiorii de Vede</h3>
+                            <p class="text-gray-600">Specialization: Informatics-Mathematics Intensive</p>
+                            <p class="text-gray-500 font-medium mt-2">Graduated: 2009</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="text-center mt-12 py-4 border-t border-gray-300">
+            <p class="text-gray-600">Interactive Portfolio created for Rădoi Gheorghe Robert</p>
+            <div class="flex justify-center space-x-4 mt-2">
+                <a href="mailto:radoirobert@gmail.com" class="text-blue-700 hover:text-blue-900">Email</a>
+                <span class="text-gray-400">|</span>
+                <a href="https://www.linkedin.com/in/robert-radoi-a4332454/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:text-blue-900">LinkedIn</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Base function for navigating between sections
+        function showSection(sectionId, clickedButton) {
+            // Hide all content sections
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Show the target section
+            const activeSection = document.getElementById(sectionId);
+            if (activeSection) {
+                activeSection.classList.add('active');
+            }
+
+            // Update the active state of navigation buttons
+            const buttons = document.querySelectorAll('.nav-button');
+            buttons.forEach(button => {
+                button.classList.remove('active');
+            });
+            if (clickedButton) {
+                clickedButton.classList.add('active');
+            }
+        }
+
+        // Function to toggle job details
+        function toggleDetails(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.classList.toggle('hidden');
+            }
+        }
+
+        // Function to create the radar chart
+        function createRadarChart() {
+            const ctx = document.getElementById('skillsRadarChart').getContext('2d');
+            
+            // Check if a chart already exists on this canvas
+            let existingChart = Chart.getChart(ctx);
+            if (existingChart) {
+                existingChart.destroy();
+            }
+
+            const data = {
+                labels: [
+                    'QA Testing',
+                    'Scripting/Technical',
+                    'DevOps/Agile',
+                    'Customer Management',
+                    'E-commerce Operations'
+                ],
+                datasets: [{
+                    label: 'Hybrid Skills Profile',
+                    data: [8, 5, 6, 7, 7], // Estimates based on CV (on a scale of 10)
+                    fill: true,
+                    backgroundColor: 'rgba(29, 78, 216, 0.2)', // bg-blue-700 with transparency
+                    borderColor: 'rgba(29, 78, 216, 1)', // bg-blue-700
+                    pointBackgroundColor: 'rgba(29, 78, 216, 1)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgba(29, 78, 216, 1)'
+                }]
+            };
+
+            const options = {
+                maintainAspectRatio: false,
+                responsive: true,
+                scales: {
+                    r: {
+                        angleLines: {
+                            color: '#d1d5db' // gray-300
+                        },
+                        grid: {
+                            color: '#e5e7eb' // gray-200
+                        },
+                        pointLabels: {
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            color: '#374151' // gray-700
+                        },
+                        ticks: {
+                            backdropColor: 'rgba(255, 255, 255, 0.75)',
+                            color: '#4b5563', // gray-600
+                            stepSize: 2,
+                            beginAtZero: true,
+                            max: 10
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            font: {
+                                size: 14
+                            },
+                            color: '#1f2937' // gray-800
+                        }
+                    }
+                }
+            };
+
+            new Chart(ctx, {
+                type: 'radar',
+                data: data,
+                options: options
+            });
+        }
+
+        // Application initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            // Show the "Home" section and create the chart on load
+            showSection('home', document.querySelector('.nav-button'));
+            createRadarChart();
+        });
+    </script>
+
+</body>
+</html>
