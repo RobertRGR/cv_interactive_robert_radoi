@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ro">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,8 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Chosen Palette: Warm Neutrals & Muted Blue -->
-    <!-- Application Structure Plan: I chose an SPA structure with main navigation (Home, Career, Skills, Certifications) that toggles section visibility. This is superior to a static CV, allowing the user to explore interactively. The "Home" section uses a radar chart to visualize the candidate's "hybrid" profile. The "Career Path" section uses an interactive vertical timeline (click-to-expand) to present job details and, crucially, the analyzed "transferable skills," effectively narrating the career evolution story. -->
-    <!-- Visualization & Content Choices: CV Data -> Goal: Show the hybrid profile -> Viz: Radar Chart (Chart.js) -> Interaction: N/A (static viz) -> Justification: A radar chart is excellent for visualizing strengths across multiple categories simultaneously. CV Experience -> Goal: Show career evolution and transferable skills -> Viz: Vertical Timeline (HTML/CSS) -> Interaction: Click on job title to expand/collapse details -> Justification: Allows the user to focus only on roles of interest, without being overwhelmed by text, and highlights the strategic analysis of each role. Skills/Certs -> Goal: Clear presentation -> Viz: Cards (HTML/Tailwind) -> Interaction: N/A (static) -> Justification: A clean, modern way to group information. -->
+    <!-- Application Structure Plan: Am creat o structură de SPA bilingvă. Toate textele sunt stocate într-un obiect JavaScript (`langData`) și sunt injectate dinamic în HTML pe baza limbii selectate. Această abordare (separarea conținutului de structură) este mult superioară și mai ușor de întreținut decât a avea HTML duplicat. -->
+    <!-- Visualization & Content Choices: Am folosit aceleași vizualizări ca înainte (Radar Chart, Cronologie Verticală). Logica de limbă este acum extinsă pentru a actualiza și etichetele graficului Chart.js în mod dinamic. -->
+    <!-- Language Functionality: O funcție `setLanguage(lang)` este inima aplicației. Aceasta: 1. Parcurge toate elementele cu un atribut `data-key`. 2. Preia textul corespunzător din obiectul `langData`. 3. Actualizează `innerText`. 4. Re-desenează graficul radar cu etichetele în limba corectă. 5. Salvează preferința de limbă în `localStorage` pentru a o menține la reîncărcarea paginii. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
@@ -27,10 +28,10 @@
             background-color: #e0e7ff; /* bg-indigo-100 */
         }
         .content-section {
-            display: none; /* Hidden by default */
+            display: none; /* Ascunse implicit */
         }
         .content-section.active {
-            display: block; /* Shown when active */
+            display: block; /* Afișate când sunt active */
         }
         .timeline-dot {
             position: absolute;
@@ -57,39 +58,74 @@
                 height: 400px;
             }
         }
+        /* Stiluri pentru butoanele de limbă */
+        .lang-switcher {
+            position: absolute;
+            top: 2rem;
+            right: 0;
+        }
+        .lang-button {
+            background-color: #e0e7ff; /* bg-indigo-100 */
+            color: #1d4ed8; /* text-blue-700 */
+            font-weight: 600;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        .lang-button:hover {
+            background-color: #c7d2fe; /* bg-indigo-200 */
+        }
+        .lang-button.active {
+            background-color: #1d4ed8; /* bg-blue-700 */
+            color: white;
+        }
+        .lang-button:first-child {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        .lang-button:last-child {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 leading-relaxed">
 
-    <div class="container mx-auto p-4 md:p-8 max-w-6xl">
+    <div class="container mx-auto p-4 md:p-8 max-w-6xl relative">
 
-        <!-- Header and Title -->
-        <header class="text-center mb-8">
+        <!-- Butoanele de Limbă -->
+        <div class="lang-switcher">
+            <button id="btn-en" class="lang-button" onclick="setLanguage('en')">EN</button>
+            <button id="btn-ro" class="lang-button" onclick="setLanguage('ro')">RO</button>
+        </div>
+
+        <!-- Antet și Titlu -->
+        <header class="text-center mb-8 pt-12 md:pt-0">
             <h1 class="text-4xl md:text-5xl font-bold text-blue-800 mb-2">Rădoi Gheorghe Robert</h1>
-            <p class="text-xl text-gray-600">Interactive Career Portfolio</p>
-            <p class="text-md text-gray-500 mt-2">QA Tester | Process Developer | Product Specialist</p>
+            <p class="text-xl text-gray-600" data-key="header_subtitle">Portofoliu Interactiv de Carieră</p>
+            <p class="text-md text-gray-500 mt-2" data-key="header_jobtitle">QA Tester | Dezvoltator de Procese | Specialist de Produs</p>
         </header>
 
-        <!-- Main Navigation -->
+        <!-- Navigație Principală -->
         <nav class="flex flex-wrap justify-center gap-2 md:gap-4 mb-8">
-            <button class="nav-button active py-2 px-4 rounded-lg font-semibold text-gray-700" onclick="showSection('home', this)">Home</button>
-            <button class="nav-button py-2 px-4 rounded-lg font-semibold text-gray-700" onclick="showSection('career', this)">Career Path</button>
-            <button class="nav-button py-2 px-4 rounded-lg font-semibold text-gray-700" onclick="showSection('skills', this)">Skills</button>
-            <button class="nav-button py-2 px-4 rounded-lg font-semibold text-gray-700" onclick="showSection('certs', this)">Certifications</button>
-            <button class="nav-button py-2 px-4 rounded-lg font-semibold text-gray-700" onclick="showSection('education', this)">Education</button>
+            <button data-key="nav_home" class="nav-button active py-2 px-4 rounded-lg font-semibold text-gray-700" onclick="showSection('acasa', this)">Acasă</button>
+            <button data-key="nav_career" class="nav-button py-2 px-4 rounded-lg font-semibold text-gray-700" onclick="showSection('cariera', this)">Parcurs Carieră</button>
+            <button data-key="nav_skills" class="nav-button py-2 px-4 rounded-lg font-semibold text-gray-700" onclick="showSection('competente', this)">Competențe</button>
+            <button data-key="nav_certs" class="nav-button py-2 px-4 rounded-lg font-semibold text-gray-700" onclick="showSection('certificari', this)">Certificări</button>
+            <button data-key="nav_education" class="nav-button py-2 px-4 rounded-lg font-semibold text-gray-700" onclick="showSection('educatie', this)">Educație</button>
         </nav>
 
-        <!-- Main Content Container -->
+        <!-- Containerul Principal pentru Conținut -->
         <main>
-            <!-- Section 1: Home -->
-            <section id="home" class="content-section active">
+            <!-- Secțiunea 1: Acasă -->
+            <section id="acasa" class="content-section active">
                 <div class="bg-white p-6 md:p-8 rounded-xl shadow-md">
-                    <h2 class="text-3xl font-bold text-blue-800 mb-4">Hybrid Profile: The Bridge Between Client and Code</h2>
-                    <p class="text-lg text-gray-700 mb-6">
-                        I am a motivated QA professional with recent experience in functional game testing. I possess a solid understanding of the Software Development Life Cycle (SDLC) and testing methodologies, including functional, regression, and security testing. What sets me apart is my **hybrid profile**: I combine the technical rigor of QA with practical experience in e-commerce operations and a deep understanding of customer needs, gained in sales and product management roles.
+                    <h2 class="text-3xl font-bold text-blue-800 mb-4" data-key="home_title">Profil Hibrid: Puntea dintre Client și Cod</h2>
+                    <p class="text-lg text-gray-700 mb-6" data-key="home_p1">
+                        Sunt un profesionist QA motivat, cu experiență recentă în testarea funcțională a jocurilor. Dețin o înțelegere solidă a ciclului de viață al dezvoltării software (SDLC) și a metodologiilor de testare, inclusiv testarea funcțională, de regresie și de securitate. Ceea ce mă diferențiază este **profilul meu hibrid**: combin rigoarea tehnică a QA-ului cu experiența practică în operațiuni e-commerce și o înțelegere profundă a nevoilor clientului, dobândită în roluri de vânzări și management de produs.
                     </p>
-                    <p class="text-lg text-gray-700 mb-8">
-                        This radar chart illustrates how my competencies intersect, creating a unique profile capable of ensuring quality not only from a technical perspective but also from the end-user experience standpoint.
+                    <p class="text-lg text-gray-700 mb-8" data-key="home_p2">
+                        Acest grafic radar ilustrează modul în care competențele mele se întrepătrund, creând un profil unic, capabil să asigure calitatea nu doar din punct de vedere tehnic, ci și din perspectiva experienței utilizatorului final.
                     </p>
                     <div class="chart-container">
                         <canvas id="skillsRadarChart"></canvas>
@@ -97,214 +133,214 @@
                 </div>
             </section>
 
-            <!-- Section 2: Career Path -->
-            <section id="career" class="content-section">
+            <!-- Secțiunea 2: Parcurs Carieră -->
+            <section id="cariera" class="content-section">
                 <div class="bg-white p-6 md:p-8 rounded-xl shadow-md">
-                    <h2 class="text-3xl font-bold text-blue-800 mb-4">Career Path</h2>
-                    <p class="text-lg text-gray-700 mb-8">
-                        My career is a story of evolution and adaptation, starting from understanding the customer and business operations, and leading to the technical discipline of quality assurance. Click on each role to view details and, most importantly, the transferable skills acquired.
+                    <h2 class="text-3xl font-bold text-blue-800 mb-4" data-key="career_title">Parcursul Carieră</h2>
+                    <p class="text-lg text-gray-700 mb-8" data-key="career_subtitle">
+                        Cariera mea este o poveste despre evoluție și adaptare, pornind de la înțelegerea clientului și a operațiunilor de business, și ajungând la disciplina tehnică a asigurării calității. Faceți clic pe fiecare rol pentru a vedea detaliile și, cel mai important, competențele transferabile dobândite.
                     </p>
                     
-                    <!-- Vertical Timeline -->
+                    <!-- Cronologia Verticală -->
                     <div class="relative pl-8 border-l-4 border-blue-700">
 
                         <!-- Job 1: QA Tester -->
                         <div class="mb-12 relative">
                             <span class="timeline-dot"></span>
-                            <h3 class="text-xl md:text-2xl font-semibold text-blue-800 cursor-pointer hover:text-blue-600" onclick="toggleDetails('job-qa')">
+                            <h3 class="text-xl md:text-2xl font-semibold text-blue-800 cursor-pointer hover:text-blue-600" data-key="job1_title" onclick="toggleDetails('job-qa')">
                                 QA Tester - Testronic
                             </h3>
-                            <p class="text-gray-500 font-medium">October 2023 - November 2025</p>
+                            <p class="text-gray-500 font-medium" data-key="job1_date">Octombrie 2023 - Noiembrie 2025</p>
                             <div id="job-qa" class="hidden mt-4 text-gray-700 bg-gray-50 p-4 rounded-lg border">
-                                <p class="font-semibold">Key Responsibilities:</p>
+                                <p class="font-semibold" data-key="job_resp_title">Responsabilități Cheie:</p>
                                 <ul class="list-disc list-outside ml-5 space-y-1 mt-2">
-                                    <li>Performed functional testing of games on various platforms.</li>
-                                    <li>Identified and reported detailed defects (bugs).</li>
-                                    <li>Utilized test management tools (JIRA, Confluence, TestRail, TestPad).</li>
-                                    <li>Ensured product quality through rigorous execution of regression testing.</li>
+                                    <li data-key="job1_resp1">Testarea funcțională a jocurilor pe diverse platforme.</li>
+                                    <li data-key="job1_resp2">Identificarea și raportarea detaliată a defectelor (bug-urilor).</li>
+                                    <li data-key="job1_resp3">Utilizarea uneltelor de management al testării (JIRA, Confluence, TestRail, TestPad).</li>
+                                    <li data-key="job1_resp4">Asigurarea calității produsului prin execuția riguroasă a testelor de regresie.</li>
                                 </ul>
                                 <hr class="my-4">
-                                <p class="font-semibold text-blue-700">Transferable Skills Analysis:</p>
-                                <p class="mt-2">Formalization of "attention to detail" discipline into a technical methodology (STLC). Transitioned from preventing operational errors (e-commerce) to systematic software defect identification.</p>
+                                <p class="font-semibold text-blue-700" data-key="job_skill_title">Analiza Competențelor Transferabile:</p>
+                                <p class="mt-2" data-key="job1_skill_desc">Formalizarea disciplinei de "atenție la detalii" într-o metodologie tehnică (STLC). Trecerea de la prevenirea erorilor operaționale (e-commerce) la identificarea sistematică a defectelor de software.</p>
                             </div>
                         </div>
 
-                        <!-- Job 2: Personal Project -->
+                        <!-- Job 2: Proiect Personal -->
                         <div class="mb-12 relative">
                             <span class="timeline-dot"></span>
-                            <h3 class="text-xl md:text-2xl font-semibold text-blue-800 cursor-pointer hover:text-blue-600" onclick="toggleDetails('job-proiect')">
-                                Personal Project - Reddish Plant Group SRL
+                            <h3 class="text-xl md:text-2xl font-semibold text-blue-800 cursor-pointer hover:text-blue-600" data-key="job2_title" onclick="toggleDetails('job-proiect')">
+                                Proiect Personal - Reddish Plant Group SRL
                             </h3>
-                            <p class="text-gray-500 font-medium">2023 - Ongoing</p>
+                            <p class="text-gray-500 font-medium" data-key="job2_date">2023 - Prezent</p>
                             <div id="job-proiect" class="hidden mt-4 text-gray-700 bg-gray-50 p-4 rounded-lg border">
-                                <p class="font-semibold">Description:</p>
+                                <p class="font-semibold" data-key="job_desc_title">Descriere:</p>
                                 <ul class="list-disc list-outside ml-5 space-y-1 mt-2">
-                                    <li>Involved in the development and establishment of a personal project: a 2-hectare Goji berry shrub plantation.</li>
+                                    <li data-key="job2_resp1">Implicat în dezvoltarea și înființarea unui proiect personal: o plantație de arbuști Goji pe 2 hectare.</li>
                                 </ul>
                                 <hr class="my-4">
-                                <p class="font-semibold text-blue-700">Transferable Skills Analysis:</p>
-                                <p class="mt-2">Demonstrates **Project Management** abilities, long-term planning, budgeting, resource management, and autonomous execution.</p>
+                                <p class="font-semibold text-blue-700" data-key="job_skill_title">Analiza Competențelor Transferabile:</p>
+                                <p class="mt-2" data-key="job2_skill_desc">Demonstrează abilități de **Management de Proiect**, planificare pe termen lung, bugetare, gestionarea resurselor și execuție autonomă.</p>
                             </div>
                         </div>
 
                         <!-- Job 3: Promoter, Sales -->
                         <div class="mb-12 relative">
                             <span class="timeline-dot"></span>
-                            <h3 class="text-xl md:text-2xl font-semibold text-blue-800 cursor-pointer hover:text-blue-600" onclick="toggleDetails('job-sony')">
-                                Promoter, Sales - Sony, Bucharest
+                            <h3 class="text-xl md:text-2xl font-semibold text-blue-800 cursor-pointer hover:text-blue-600" data-key="job3_title" onclick="toggleDetails('job-sony')">
+                                Promoter, Sales - Sony, București
                             </h3>
-                            <p class="text-gray-500 font-medium">May 2017 - December 2022</p>
+                            <p class="text-gray-500 font-medium" data-key="job3_date">Mai 2017 - Decembrie 2022</p>
                             <div id="job-sony" class="hidden mt-4 text-gray-700 bg-gray-50 p-4 rounded-lg border">
-                                <p class="font-semibold">Key Responsibilities:</p>
+                                <p class="font-semibold" data-key="job_resp_title">Responsabilități Cheie:</p>
                                 <ul class="list-disc list-outside ml-5 space-y-1 mt-2">
-                                    <li>Directly interacted with customers and promoted Sony products in specialty stores.</li>
-                                    <li>Involved in the sales process and implemented offers and prices.</li>
+                                    <li data-key="job3_resp1">Interacțiune directă cu clienții și promovarea produselor Sony.</li>
+                                    <li data-key="job3_resp2">Implicare în procesul de vânzare și implementarea ofertelor și prețurilor.</li>
                                 </ul>
                                 <hr class="my-4">
-                                <p class="font-semibold text-blue-700">Transferable Skills Analysis:</p>
-                                <p class="mt-2">Developed **customer empathy** and communication skills. Deep understanding of how an end-user perceives a product, essential for writing relevant test cases.</p>
+                                <p class="font-semibold text-blue-700" data-key="job_skill_title">Analiza Competențelor Transferabile:</p>
+                                <p class="mt-2" data-key="job3_skill_desc">Dezvoltarea **empatiei față de client** și a abilităților de comunicare. Înțelegerea profundă a modului în care un utilizator final percepe un produs, esențială pentru a scrie cazuri de testare (test cases) relevante.</p>
                             </div>
                         </div>
 
                         <!-- Job 4: Computer Operator -->
                         <div class="mb-12 relative">
                             <span class="timeline-dot"></span>
-                            <h3 class="text-xl md:text-2xl font-semibold text-blue-800 cursor-pointer hover:text-blue-600" onclick="toggleDetails('job-cel')">
+                            <h3 class="text-xl md:text-2xl font-semibold text-blue-800 cursor-pointer hover:text-blue-600" data-key="job4_title" onclick="toggleDetails('job-cel')">
                                 Computer Operator/Product Manager - Corsar Online, cel.ro
                             </h3>
-                            <p class="text-gray-500 font-medium">January 2014 - July 2015</p>
+                            <p class="text-gray-500 font-medium" data-key="job4_date">Ianuarie 2014 - Iulie 2015</p>
                             <div id="job-cel" class="hidden mt-4 text-gray-700 bg-gray-50 p-4 rounded-lg border">
-                                <p class="font-semibold">Key Responsibilities:</p>
+                                <p class="font-semibold" data-key="job_resp_title">Responsabilități Cheie:</p>
                                 <ul class="list-disc list-outside ml-5 space-y-1 mt-2">
-                                    <li>Carried out prospecting and product listing on the website, including specific item codes.</li>
-                                    <li>Implemented prices and promotions in collaboration with IT suppliers.</li>
-                                    <li>Checked and edited product images.</li>
+                                    <li data-key="job4_resp1">Prospectare și listare produse pe website, inclusiv coduri specifice.</li>
+                                    <li data-key="job4_resp2">Implementare prețuri și promoții în colaborare cu furnizorii IT.</li>
+                                    <li data-key="job4_resp3">Verificare și editare imagini produse.</li>
                                 </ul>
                                 <hr class="my-4">
-                                <p class="font-semibold text-blue-700">Transferable Skills Analysis:</p>
-                                <p class="mt-2">Developed **meticulous attention to detail** and **data integrity**. Served as a "bridge" between business requirements and technical execution (IT), a key skill in QA and Business Analysis.</p>
+                                <p class="font-semibold text-blue-700" data-key="job_skill_title">Analiza Competențelor Transferabile:</p>
+                                <p class="mt-2" data-key="job4_skill_desc">Dezvoltarea unei **atenții meticuloase la detalii** și **integritatea datelor**. A servit ca "punte" între cerințele de business și execuția tehnică (IT), o abilitate cheie în QA și Business Analysis.</p>
                             </div>
                         </div>
 
                         <!-- Job 5: Internship -->
                         <div class="relative">
                             <span class="timeline-dot"></span>
-                            <h3 class="text-xl md:text-2xl font-semibold text-blue-800 cursor-pointer hover:text-blue-600" onclick="toggleDetails('job-intern')">
+                            <h3 class="text-xl md:text-2xl font-semibold text-blue-800 cursor-pointer hover:text-blue-600" data-key="job5_title" onclick="toggleDetails('job-intern')">
                                 Junior Account Manager - Internship - Power Net Consulting
                             </h3>
-                            <p class="text-gray-500 font-medium">August 2013 - November 2013</p>
+                            <p class="text-gray-500 font-medium" data-key="job5_date">August 2013 - Noiembrie 2013</p>
                             <div id="job-intern" class="hidden mt-4 text-gray-700 bg-gray-50 p-4 rounded-lg border">
-                                <p class="font-semibold">Key Responsibilities:</p>
+                                <p class="font-semibold" data-key="job_resp_title">Responsabilități Cheie:</p>
                                 <ul class="list-disc list-outside ml-5 space-y-1 mt-2">
-                                    <li>Analyzed customer needs and prepared offers.</li>
-                                    <li>Collaborated directly with the end customer to implement the best option, based on identified needs.</li>
+                                    <li data-key="job5_resp1">Analiza nevoilor clienților și pregătirea ofertelor.</li>
+                                    <li data-key="job5_resp2">Colaborare directă cu clientul final pentru implementarea celei mai bune opțiuni.</li>
                                 </ul>
                                 <hr class="my-4">
-                                <p class="font-semibold text-blue-700">Transferable Skills Analysis:</p>
-                                <p class="mt-2">Foundation in **requirements analysis** and stakeholder communication, essential for understanding what needs to be tested.</p>
+                                <p class="font-semibold text-blue-700" data-key="job_skill_title">Analiza Competențelor Transferabile:</p>
+                                <p class="mt-2" data-key="job5_skill_desc">Fundație în **analiza cerințelor (requirements analysis)** și comunicarea cu stakeholderii, esențială pentru a înțelege ce trebuie testat.</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Section 3: Skills -->
-            <section id="skills" class="content-section">
+            <!-- Secțiunea 3: Competențe -->
+            <section id="competente" class="content-section">
                 <div class="bg-white p-6 md:p-8 rounded-xl shadow-md">
-                    <h2 class="text-3xl font-bold text-blue-800 mb-4">Technical and Key Skills</h2>
-                    <p class="text-lg text-gray-700 mb-8">
-                        A breakdown of the tools, methodologies, and concepts I master, demonstrating a solid foundation for technical and hybrid roles.
+                    <h2 class="text-3xl font-bold text-blue-800 mb-4" data-key="skills_title">Competențe Tehnice și Cheie</h2>
+                    <p class="text-lg text-gray-700 mb-8" data-key="skills_subtitle">
+                        O defalcare a uneltelor, metodologiilor și conceptelor pe care le stăpânesc, demonstrând o bază solidă pentru roluri tehnice și hibride.
                     </p>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <!-- Card 1: Testing -->
+                        <!-- Card 1: Testare -->
                         <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
-                            <h3 class="text-xl font-bold text-blue-800 mb-3">Testing & Methodologies</h3>
+                            <h3 class="text-xl font-bold text-blue-800 mb-3" data-key="skills_card1_title">Testare și Metodologii</h3>
                             <ul class="space-y-2 text-gray-700">
-                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Manual Testing</li>
-                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Functional Testing</li>
-                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Regression Testing</li>
-                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Security Testing</li>
-                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Quality Assurance (QA)</li>
-                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Software Testing Life Cycle (STLC)</li>
+                                <li data-key="skill1_1" class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Testare Manuală</li>
+                                <li data-key="skill1_2" class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Testare Funcțională</li>
+                                <li data-key="skill1_3" class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Testare de Regresie</li>
+                                <li data-key="skill1_4" class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Testare de Securitate</li>
+                                <li data-key="skill1_5" class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Quality Assurance (QA)</li>
+                                <li data-key="skill1_6" class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Software Testing Life Cycle (STLC)</li>
                             </ul>
                         </div>
-                        <!-- Card 2: Tools -->
+                        <!-- Card 2: Unelte -->
                         <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
-                            <h3 class="text-xl font-bold text-blue-800 mb-3">Tools</h3>
+                            <h3 class="text-xl font-bold text-blue-800 mb-3" data-key="skills_card2_title">Unelte (Tools)</h3>
                             <ul class="space-y-2 text-gray-700">
-                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>JIRA</li>
-                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>TestRail</li>
-                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>TestPad</li>
-                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Confluence</li>
-                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Selenium (Knowledge)</li>
+                                <li data-key="skill2_1" class="flex items-center"><span class="text-blue-700 mr-2">✔</span>JIRA</li>
+                                <li data-key="skill2_2" class="flex items-center"><span class="text-blue-700 mr-2">✔</span>TestRail</li>
+                                <li data-key="skill2_3" class="flex items-center"><span class="text-blue-700 mr-2">✔</span>TestPad</li>
+                                <li data-key="skill2_4" class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Confluence</li>
+                                <li data-key="skill2_5" class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Selenium (Cunoștințe)</li>
                             </ul>
                         </div>
-                        <!-- Card 3: Technologies & Concepts -->
+                        <!-- Card 3: Tehnologii & Concepte -->
                         <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
-                            <h3 class="text-xl font-bold text-blue-800 mb-3">Technologies & Concepts</h3>
+                            <h3 class="text-xl font-bold text-blue-800 mb-3" data-key="skills_card3_title">Tehnologii & Concepte</h3>
                             <ul class="space-y-2 text-gray-700">
-                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Python</li>
-                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>JavaScript (JS)</li>
-                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>HTML & CSS</li>
-                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Linux</li>
-                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Project Management</li>
-                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>DevOps & Cloud (Concepts)</li>
-                                <li class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Scrum</li>
+                                <li data-key="skill3_1" class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Python</li>
+                                <li data-key="skill3_2" class="flex items-center"><span class="text-blue-700 mr-2">✔</span>JavaScript (JS)</li>
+                                <li data-key="skill3_3" class="flex items-center"><span class="text-blue-700 mr-2">✔</span>HTML & CSS</li>
+                                <li data-key="skill3_4" class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Linux</li>
+                                <li data-key="skill3_5" class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Project Management</li>
+                                <li data-key="skill3_6" class="flex items-center"><span class="text-blue-700 mr-2">✔</span>DevOps & Cloud (Concepte)</li>
+                                <li data-key="skill3_7" class="flex items-center"><span class="text-blue-700 mr-2">✔</span>Scrum</li>
                             </ul>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Section 4: Certifications -->
-            <section id="certs" class="content-section">
+            <!-- Secțiunea 4: Certificări -->
+            <section id="certificari" class="content-section">
                 <div class="bg-white p-6 md:p-8 rounded-xl shadow-md">
-                    <h2 class="text-3xl font-bold text-blue-800 mb-4">Licenses and Certifications</h2>
-                    <p class="text-lg text-gray-700 mb-8">
-                        Demonstrating my commitment to continuous learning and the strategic pivot toward a career in technology and quality assurance.
+                    <h2 class="text-3xl font-bold text-blue-800 mb-4" data-key="certs_title">Licențe și Certificări</h2>
+                    <p class="text-lg text-gray-700 mb-8" data-key="certs_subtitle">
+                        Demonstrarea angajamentului meu pentru învățare continuă și pivotarea strategică către o carieră în tehnologie și asigurarea calității.
                     </p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                            <h3 class="text-xl font-semibold text-blue-800">Fundamentals of Software Testing</h3>
-                            <p class="text-gray-600">Telecom Academy România</p>
-                            <p class="text-gray-500 font-medium mt-2">June 2023</p>
+                            <h3 class="text-xl font-semibold text-blue-800" data-key="cert1_title">Fundamentals of Software Testing</h3>
+                            <p class="text-gray-600" data-key="cert1_issuer">Telecom Academy România</p>
+                            <p class="text-gray-500 font-medium mt-2" data-key="cert1_date">Iunie 2023</p>
                         </div>
                         <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                            <h3 class="text-xl font-semibold text-blue-800">IBM DevOps, Cloud, and Agile Foundations Specialization</h3>
-                            <p class="text-gray-600">IBM (Coursera)</p>
-                            <p class="text-gray-500 font-medium mt-2">June 2023</p>
+                            <h3 class="text-xl font-semibold text-blue-800" data-key="cert2_title">IBM DevOps, Cloud, and Agile Foundations Specialization</h3>
+                            <p class="text-gray-600" data-key="cert2_issuer">IBM (Coursera)</p>
+                            <p class="text-gray-500 font-medium mt-2" data-key="cert2_date">Iunie 2023</p>
                         </div>
                         <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                            <h3 class="text-xl font-semibold text-blue-800">IBM Web Development Fundamentals</h3>
-                            <p class="text-gray-600">IBM (Coursera)</p>
-                            <p class="text-gray-500 font-medium mt-2">April 2023</p>
+                            <h3 class="text-xl font-semibold text-blue-800" data-key="cert3_title">IBM Web Development Fundamentals</h3>
+                            <p class="text-gray-600" data-key="cert3_issuer">IBM (Coursera)</p>
+                            <p class="text-gray-500 font-medium mt-2" data-key="cert3_date">Aprilie 2023</p>
                         </div>
                         <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                            <h3 class="text-xl font-semibold text-blue-800">Google Crash Course on Python</h3>
-                            <p class="text-gray-600">Google (Coursera)</p>
-                            <p class="text-gray-500 font-medium mt-2">August 2022</p>
+                            <h3 class="text-xl font-semibold text-blue-800" data-key="cert4_title">Google Crash Course on Python</h3>
+                            <p class="text-gray-600" data-key="cert4_issuer">Google (Coursera)</p>
+                            <p class="text-gray-500 font-medium mt-2" data-key="cert4_date">August 2022</p>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Section 5: Education -->
-            <section id="education" class="content-section">
+            <!-- Secțiunea 5: Educație -->
+            <section id="educatie" class="content-section">
                 <div class="bg-white p-6 md:p-8 rounded-xl shadow-md">
-                    <h2 class="text-3xl font-bold text-blue-800 mb-4">Education</h2>
-                    <p class="text-lg text-gray-700 mb-8">
-                        The academic foundation that complements my practical experience.
+                    <h2 class="text-3xl font-bold text-blue-800 mb-4" data-key="edu_title">Educație</h2>
+                    <p class="text-lg text-gray-700 mb-8" data-key="edu_subtitle">
+                        Fundația academică care completează experiența mea practică.
                     </p>
                     <div class="space-y-6">
                         <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                            <h3 class="text-xl font-semibold text-blue-800">Bachelor's Degree (Engineer) - University of Agronomic Sciences and Veterinary Medicine from Bucharest</h3>
-                            <p class="text-gray-600">Specialization: Economic Engineering in Agriculture and Rural Development</p>
-                            <p class="text-gray-500 font-medium mt-2">Graduated: 2020</p>
+                            <h3 class="text-xl font-semibold text-blue-800" data-key="edu1_title">Licență (Inginer) - Universitatea de Științe Agronomice și Medicină Veterinară din București</h3>
+                            <p class="text-gray-600" data-key="edu1_spec">Specializare: Inginerie Economică în Agricultură și Dezvoltare Rurală</p>
+                            <p class="text-gray-500 font-medium mt-2" data-key="edu1_date">Absolvit: 2020</p>
                         </div>
                         <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                            <h3 class="text-xl font-semibold text-blue-800">High School - National College Anastasescu, Roșiorii de Vede</h3>
-                            <p class="text-gray-600">Specialization: Informatics-Mathematics Intensive</p>
-                            <p class="text-gray-500 font-medium mt-2">Graduated: 2009</p>
+                            <h3 class="text-xl font-semibold text-blue-800" data-key="edu2_title">Liceu - Colegiul Național Anastasescu, Roșiorii de Vede</h3>
+                            <p class="text-gray-600" data-key="edu2_spec">Specializare: Matematică-Informatică Intensiv</p>
+                            <p class="text-gray-500 font-medium mt-2" data-key="edu2_date">Absolvit: 2009</p>
                         </div>
                     </div>
                 </div>
@@ -313,9 +349,9 @@
 
         <!-- Footer -->
         <footer class="text-center mt-12 py-4 border-t border-gray-300">
-            <p class="text-gray-600">Interactive Portfolio created for Rădoi Gheorghe Robert</p>
+            <p class="text-gray-600" data-key="footer_text">Portofoliu Interactiv creat pentru Rădoi Gheorghe Robert</p>
             <div class="flex justify-center space-x-4 mt-2">
-                <a href="mailto:radoirobert@gmail.com" class="text-blue-700 hover:text-blue-900">Email</a>
+                <a href="mailto:radoirobert@gmail.com" class="text-blue-700 hover:text-blue-900" data-key="footer_email">Email</a>
                 <span class="text-gray-400">|</span>
                 <a href="https://www.linkedin.com/in/robert-radoi-a4332454/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:text-blue-900">LinkedIn</a>
             </div>
@@ -323,43 +359,281 @@
     </div>
 
     <script>
-        // Base function for navigating between sections
+        // --- Obiectul de limbă ---
+        // Stochează toate textele bilingve. Cheile corespund atributelor 'data-key' din HTML.
+        const langData = {
+            'en': {
+                'header_subtitle': 'Interactive Career Portfolio',
+                'header_jobtitle': 'QA Tester | Process Developer | Product Specialist',
+                'nav_home': 'Home',
+                'nav_career': 'Career Path',
+                'nav_skills': 'Skills',
+                'nav_certs': 'Certifications',
+                'nav_education': 'Education',
+                'home_title': 'Hybrid Profile: The Bridge Between Client and Code',
+                'home_p1': 'I am a motivated QA professional with recent experience in functional game testing. I possess a solid understanding of the Software Development Life Cycle (SDLC) and testing methodologies, including functional, regression, and security testing. What sets me apart is my **hybrid profile**: I combine the technical rigor of QA with practical experience in e-commerce operations and a deep understanding of customer needs, gained in sales and product management roles.',
+                'home_p2': 'This radar chart illustrates how my competencies intersect, creating a unique profile capable of ensuring quality not only from a technical perspective but also from the end-user experience standpoint.',
+                'career_title': 'Career Path',
+                'career_subtitle': 'My career is a story of evolution and adaptation, starting from understanding the customer and business operations, and leading to the technical discipline of quality assurance. Click on each role to view details and, most importantly, the transferable skills acquired.',
+                'job_resp_title': 'Key Responsibilities:',
+                'job_desc_title': 'Description:',
+                'job_skill_title': 'Transferable Skills Analysis:',
+                'job1_title': 'QA Tester - Testronic',
+                'job1_date': 'October 2023 - November 2025',
+                'job1_resp1': 'Performed functional testing of games on various platforms.',
+                'job1_resp2': 'Identified and reported detailed defects (bugs).',
+                'job1_resp3': 'Utilized test management tools (JIRA, Confluence, TestRail, TestPad).',
+                'job1_resp4': 'Ensured product quality through rigorous execution of regression testing.',
+                'job1_skill_desc': 'Formalization of "attention to detail" discipline into a technical methodology (STLC). Transitioned from preventing operational errors (e-commerce) to systematic software defect identification.',
+                'job2_title': 'Personal Project - Reddish Plant Group SRL',
+                'job2_date': '2023 - Ongoing',
+                'job2_resp1': 'Involved in the development and establishment of a personal project: a 2-hectare Goji berry shrub plantation.',
+                'job2_skill_desc': 'Demonstrates **Project Management** abilities, long-term planning, budgeting, resource management, and autonomous execution.',
+                'job3_title': 'Promoter, Sales - Sony, Bucharest',
+                'job3_date': 'May 2017 - December 2022',
+                'job3_resp1': 'Directly interacted with customers and promoted Sony products in specialty stores.',
+                'job3_resp2': 'Involved in the sales process and implemented offers and prices.',
+                'job3_skill_desc': 'Developed **customer empathy** and communication skills. Deep understanding of how an end-user perceives a product, essential for writing relevant test cases.',
+                'job4_title': 'Computer Operator/Product Manager - Corsar Online, cel.ro',
+                'job4_date': 'January 2014 - July 2015',
+                'job4_resp1': 'Carried out prospecting and product listing on the website, including specific item codes.',
+                'job4_resp2': 'Implemented prices and promotions in collaboration with IT suppliers.',
+                'job4_resp3': 'Checked and edited product images.',
+                'job4_skill_desc': 'Developed **meticulous attention to detail** and **data integrity**. Served as a "bridge" between business requirements and technical execution (IT), a key skill in QA and Business Analysis.',
+                'job5_title': 'Junior Account Manager - Internship - Power Net Consulting',
+                'job5_date': 'August 2013 - November 2013',
+                'job5_resp1': 'Analyzed customer needs and prepared offers.',
+                'job5_resp2': 'Collaborated directly with the end customer to implement the best option, based on identified needs.',
+                'job5_skill_desc': 'Foundation in **requirements analysis** and stakeholder communication, essential for understanding what needs to be tested.',
+                'skills_title': 'Technical and Key Skills',
+                'skills_subtitle': 'A breakdown of the tools, methodologies, and concepts I master, demonstrating a solid foundation for technical and hybrid roles.',
+                'skills_card1_title': 'Testing & Methodologies',
+                'skill1_1': 'Manual Testing',
+                'skill1_2': 'Functional Testing',
+                'skill1_3': 'Regression Testing',
+                'skill1_4': 'Security Testing',
+                'skill1_5': 'Quality Assurance (QA)',
+                'skill1_6': 'Software Testing Life Cycle (STLC)',
+                'skills_card2_title': 'Tools',
+                'skill2_1': 'JIRA',
+                'skill2_2': 'TestRail',
+                'skill2_3': 'TestPad',
+                'skill2_4': 'Confluence',
+                'skill2_5': 'Selenium (Knowledge)',
+                'skills_card3_title': 'Technologies & Concepts',
+                'skill3_1': 'Python',
+                'skill3_2': 'JavaScript (JS)',
+                'skill3_3': 'HTML & CSS',
+                'skill3_4': 'Linux',
+                'skill3_5': 'Project Management',
+                'skill3_6': 'DevOps & Cloud (Concepts)',
+                'skill3_7': 'Scrum',
+                'certs_title': 'Licenses and Certifications',
+                'certs_subtitle': 'Demonstrating my commitment to continuous learning and the strategic pivot toward a career in technology and quality assurance.',
+                'cert1_title': 'Fundamentals of Software Testing',
+                'cert1_issuer': 'Telecom Academy România',
+                'cert1_date': 'June 2023',
+                'cert2_title': 'IBM DevOps, Cloud, and Agile Foundations Specialization',
+                'cert2_issuer': 'IBM (Coursera)',
+                'cert2_date': 'June 2023',
+                'cert3_title': 'IBM Web Development Fundamentals',
+                'cert3_issuer': 'IBM (Coursera)',
+                'cert3_date': 'April 2023',
+                'cert4_title': 'Google Crash Course on Python',
+                'cert4_issuer': 'Google (Coursera)',
+                'cert4_date': 'August 2022',
+                'edu_title': 'Education',
+                'edu_subtitle': 'The academic foundation that complements my practical experience.',
+                'edu1_title': "Bachelor's Degree (Engineer) - University of Agronomic Sciences and Veterinary Medicine from Bucharest",
+                'edu1_spec': 'Specialization: Economic Engineering in Agriculture and Rural Development',
+                'edu1_date': 'Graduated: 2020',
+                'edu2_title': 'High School - National College Anastasescu, Roșiorii de Vede',
+                'edu2_spec': 'Specialization: Informatics-Mathematics Intensive',
+                'edu2_date': 'Graduated: 2009',
+                'footer_text': 'Interactive Portfolio created for Rădoi Gheorghe Robert',
+                'footer_email': 'Email',
+                'chart_dataset_label': 'Hybrid Skills Profile',
+                'chart_label1': 'QA Testing',
+                'chart_label2': 'Scripting/Technical',
+                'chart_label3': 'DevOps/Agile',
+                'chart_label4': 'Customer Management',
+                'chart_label5': 'E-commerce Operations'
+            },
+            'ro': {
+                'header_subtitle': 'Portofoliu Interactiv de Carieră',
+                'header_jobtitle': 'QA Tester | Dezvoltator de Procese | Specialist de Produs',
+                'nav_home': 'Acasă',
+                'nav_career': 'Parcurs Carieră',
+                'nav_skills': 'Competențe',
+                'nav_certs': 'Certificări',
+                'nav_education': 'Educație',
+                'home_title': 'Profil Hibrid: Puntea dintre Client și Cod',
+                'home_p1': 'Sunt un profesionist QA motivat, cu experiență recentă în testarea funcțională a jocurilor. Dețin o înțelegere solidă a ciclului de viață al dezvoltării software (SDLC) și a metodologiilor de testare, inclusiv testarea funcțională, de regresie și de securitate. Ceea ce mă diferențiază este **profilul meu hibrid**: combin rigoarea tehnică a QA-ului cu experiența practică în operațiuni e-commerce și o înțelegere profundă a nevoilor clientului, dobândită în roluri de vânzări și management de produs.',
+                'home_p2': 'Acest grafic radar ilustrează modul în care competențele mele se întrepătrund, creând un profil unic, capabil să asigure calitatea nu doar din punct de vedere tehnic, ci și din perspectiva experienței utilizatorului final.',
+                'career_title': 'Parcursul Carieră',
+                'career_subtitle': 'Cariera mea este o poveste despre evoluție și adaptare, pornind de la înțelegerea clientului și a operațiunilor de business, și ajungând la disciplina tehnică a asigurării calității. Faceți clic pe fiecare rol pentru a vedea detaliile și, cel mai important, competențele transferabile dobândite.',
+                'job_resp_title': 'Responsabilități Cheie:',
+                'job_desc_title': 'Descriere:',
+                'job_skill_title': 'Analiza Competențelor Transferabile:',
+                'job1_title': 'QA Tester - Testronic',
+                'job1_date': 'Octombrie 2023 - Noiembrie 2025',
+                'job1_resp1': 'Testarea funcțională a jocurilor pe diverse platforme.',
+                'job1_resp2': 'Identificarea și raportarea detaliată a defectelor (bug-urilor).',
+                'job1_resp3': 'Utilizarea uneltelor de management al testării (JIRA, Confluence, TestRail, TestPad).',
+                'job1_resp4': 'Asigurarea calității produsului prin execuția riguroasă a testelor de regresie.',
+                'job1_skill_desc': 'Formalizarea disciplinei de "atenție la detalii" într-o metodologie tehnică (STLC). Trecerea de la prevenirea erorilor operaționale (e-commerce) la identificarea sistematică a defectelor de software.',
+                'job2_title': 'Proiect Personal - Reddish Plant Group SRL',
+                'job2_date': '2023 - Prezent',
+                'job2_resp1': 'Implicat în dezvoltarea și înființarea unui proiect personal: o plantație de arbuști Goji pe 2 hectare.',
+                'job2_skill_desc': 'Demonstrează abilități de **Management de Proiect**, planificare pe termen lung, bugetare, gestionarea resurselor și execuție autonomă.',
+                'job3_title': 'Promoter, Sales - Sony, București',
+                'job3_date': 'Mai 2017 - Decembrie 2022',
+                'job3_resp1': 'Interacțiune directă cu clienții și promovarea produselor Sony.',
+                'job3_resp2': 'Implicare în procesul de vânzare și implementarea ofertelor și prețurilor.',
+                'job3_skill_desc': 'Dezvoltarea **empatiei față de client** și a abilităților de comunicare. Înțelegerea profundă a modului în care un utilizator final percepe un produs, esențială pentru a scrie cazuri de testare (test cases) relevante.',
+                'job4_title': 'Computer Operator/Product Manager - Corsar Online, cel.ro',
+                'job4_date': 'Ianuarie 2014 - Iulie 2015',
+                'job4_resp1': 'Prospectare și listare produse pe website, inclusiv coduri specifice.',
+                'job4_resp2': 'Implementare prețuri și promoții în colaborare cu furnizorii IT.',
+                'job4_resp3': 'Verificare și editare imagini produse.',
+                'job4_skill_desc': 'Dezvoltarea unei **atenții meticuloase la detalii** și **integritatea datelor**. A servit ca "punte" între cerințele de business și execuția tehnică (IT), o abilitate cheie în QA și Business Analysis.',
+                'job5_title': 'Junior Account Manager - Internship - Power Net Consulting',
+                'job5_date': 'August 2013 - Noiembrie 2013',
+                'job5_resp1': 'Analiza nevoilor clienților și pregătirea ofertelor.',
+                'job5_resp2': 'Colaborare directă cu clientul final pentru implementarea celei mai bune opțiuni.',
+                'job5_skill_desc': 'Fundație în **analiza cerințelor (requirements analysis)** și comunicarea cu stakeholderii, esențială pentru a înțelege ce trebuie testat.',
+                'skills_title': 'Competențe Tehnice și Cheie',
+                'skills_subtitle': 'O defalcare a uneltelor, metodologiilor și conceptelor pe care le stăpânesc, demonstrând o bază solidă pentru roluri tehnice și hibride.',
+                'skills_card1_title': 'Testare și Metodologii',
+                'skill1_1': 'Testare Manuală',
+                'skill1_2': 'Testare Funcțională',
+                'skill1_3': 'Testare de Regresie',
+                'skill1_4': 'Testare de Securitate',
+                'skill1_5': 'Quality Assurance (QA)',
+                'skill1_6': 'Software Testing Life Cycle (STLC)',
+                'skills_card2_title': 'Unelte (Tools)',
+                'skill2_1': 'JIRA',
+                'skill2_2': 'TestRail',
+                'skill2_3': 'TestPad',
+                'skill2_4': 'Confluence',
+                'skill2_5': 'Selenium (Cunoștințe)',
+                'skills_card3_title': 'Tehnologii & Concepte',
+                'skill3_1': 'Python',
+                'skill3_2': 'JavaScript (JS)',
+                'skill3_3': 'HTML & CSS',
+                'skill3_4': 'Linux',
+                'skill3_5': 'Project Management',
+                'skill3_6': 'DevOps & Cloud (Concepte)',
+                'skill3_7': 'Scrum',
+                'certs_title': 'Licențe și Certificări',
+                'certs_subtitle': 'Demonstrarea angajamentului meu pentru învățare continuă și pivotarea strategică către o carieră în tehnologie și asigurarea calității.',
+                'cert1_title': 'Fundamentals of Software Testing',
+                'cert1_issuer': 'Telecom Academy România',
+                'cert1_date': 'Iunie 2023',
+                'cert2_title': 'IBM DevOps, Cloud, and Agile Foundations Specialization',
+                'cert2_issuer': 'IBM (Coursera)',
+                'cert2_date': 'Iunie 2023',
+                'cert3_title': 'IBM Web Development Fundamentals',
+                'cert3_issuer': 'IBM (Coursera)',
+                'cert3_date': 'Aprilie 2023',
+                'cert4_title': 'Google Crash Course on Python',
+                'cert4_issuer': 'Google (Coursera)',
+                'cert4_date': 'August 2022',
+                'edu_title': 'Educație',
+                'edu_subtitle': 'Fundația academică care completează experiența mea practică.',
+                'edu1_title': 'Licență (Inginer) - Universitatea de Științe Agronomice și Medicină Veterinară din București',
+                'edu1_spec': 'Specializare: Inginerie Economică în Agricultură și Dezvoltare Rurală',
+                'edu1_date': 'Absolvit: 2020',
+                'edu2_title': 'Liceu - Colegiul Național Anastasescu, Roșiorii de Vede',
+                'edu2_spec': 'Specializare: Matematică-Informatică Intensiv',
+                'edu2_date': 'Absolvit: 2009',
+                'footer_text': 'Portofoliu Interactiv creat pentru Rădoi Gheorghe Robert',
+                'footer_email': 'Email',
+                'chart_dataset_label': 'Profil Hibrid de Competențe',
+                'chart_label1': 'Testare QA',
+                'chart_label2': 'Scripting/Tehnic',
+                'chart_label3': 'DevOps/Agile',
+                'chart_label4': 'Management Client',
+                'chart_label5': 'Operațiuni E-commerce'
+            }
+        };
+
+        // --- Funcții de bază ale aplicației ---
+
+        /**
+         * Setează limba pentru întreaga pagină.
+         * @param {string} lang - Limba de setat ('en' sau 'ro').
+         */
+        function setLanguage(lang) {
+            if (!langData[lang]) {
+                console.error(`Limba '${lang}' nu este definită.`);
+                return;
+            }
+
+            // Setează limba pe elementul HTML pentru ARIA
+            document.documentElement.lang = lang;
+
+            // Actualizează toate elementele cu 'data-key'
+            document.querySelectorAll('[data-key]').forEach(element => {
+                const key = element.getAttribute('data-key');
+                if (langData[lang][key]) {
+                    // Folosim innerHTML pentru a permite tag-uri simple (ex: <b>)
+                    element.innerHTML = langData[lang][key];
+                }
+            });
+
+            // Actualizează starea activă a butoanelor de limbă
+            document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+            document.getElementById('btn-ro').classList.toggle('active', lang === 'ro');
+
+            // Re-desenează graficul cu etichetele în limba corectă
+            createRadarChart(lang);
+
+            // Salvează preferința de limbă
+            try {
+                localStorage.setItem('preferredLang', lang);
+            } catch (e) {
+                console.warn('Nu s-a putut salva preferința de limbă în localStorage.');
+            }
+        }
+
+        /**
+         * Afișează secțiunea de conținut selectată și ascunde celelalte.
+         * @param {string} sectionId - ID-ul secțiunii de afișat.
+         * @param {HTMLElement} clickedButton - Butonul pe care s-a dat clic.
+         */
         function showSection(sectionId, clickedButton) {
-            // Hide all content sections
-            const sections = document.querySelectorAll('.content-section');
-            sections.forEach(section => {
+            // Ascunde toate secțiunile de conținut
+            document.querySelectorAll('.content-section').forEach(section => {
                 section.classList.remove('active');
             });
 
-            // Show the target section
-            const activeSection = document.getElementById(sectionId);
-            if (activeSection) {
-                activeSection.classList.add('active');
-            }
+            // Afișează secțiunea țintă
+            document.getElementById(sectionId).classList.add('active');
 
-            // Update the active state of navigation buttons
-            const buttons = document.querySelectorAll('.nav-button');
-            buttons.forEach(button => {
+            // Actualizează starea activă a butoanelor de navigație
+            document.querySelectorAll('.nav-button').forEach(button => {
                 button.classList.remove('active');
             });
-            if (clickedButton) {
-                clickedButton.classList.add('active');
-            }
+            clickedButton.classList.add('active');
         }
 
-        // Function to toggle job details
+        /**
+         * Extinde sau restrânge detaliile unui job în cronologie.
+         * @param {string} elementId - ID-ul elementului de extins/restrâns.
+         */
         function toggleDetails(elementId) {
-            const element = document.getElementById(elementId);
-            if (element) {
-                element.classList.toggle('hidden');
-            }
+            document.getElementById(elementId).classList.toggle('hidden');
         }
 
-        // Function to create the radar chart
-        function createRadarChart() {
+        /**
+         * Creează sau actualizează graficul radar cu etichetele în limba specificată.
+         * @param {string} lang - Limba curentă ('en' sau 'ro').
+         */
+        function createRadarChart(lang) {
             const ctx = document.getElementById('skillsRadarChart').getContext('2d');
             
-            // Check if a chart already exists on this canvas
+            // Distruge graficul existent dacă există
             let existingChart = Chart.getChart(ctx);
             if (existingChart) {
                 existingChart.destroy();
@@ -367,18 +641,18 @@
 
             const data = {
                 labels: [
-                    'QA Testing',
-                    'Scripting/Technical',
-                    'DevOps/Agile',
-                    'Customer Management',
-                    'E-commerce Operations'
+                    langData[lang].chart_label1,
+                    langData[lang].chart_label2,
+                    langData[lang].chart_label3,
+                    langData[lang].chart_label4,
+                    langData[lang].chart_label5
                 ],
                 datasets: [{
-                    label: 'Hybrid Skills Profile',
-                    data: [8, 5, 6, 7, 7], // Estimates based on CV (on a scale of 10)
+                    label: langData[lang].chart_dataset_label,
+                    data: [8, 5, 6, 7, 7], // Estimări bazate pe CV (pe o scară de 10)
                     fill: true,
-                    backgroundColor: 'rgba(29, 78, 216, 0.2)', // bg-blue-700 with transparency
-                    borderColor: 'rgba(29, 78, 216, 1)', // bg-blue-700
+                    backgroundColor: 'rgba(29, 78, 216, 0.2)',
+                    borderColor: 'rgba(29, 78, 216, 1)',
                     pointBackgroundColor: 'rgba(29, 78, 216, 1)',
                     pointBorderColor: '#fff',
                     pointHoverBackgroundColor: '#fff',
@@ -391,22 +665,12 @@
                 responsive: true,
                 scales: {
                     r: {
-                        angleLines: {
-                            color: '#d1d5db' // gray-300
-                        },
-                        grid: {
-                            color: '#e5e7eb' // gray-200
-                        },
-                        pointLabels: {
-                            font: {
-                                size: 14,
-                                weight: 'bold'
-                            },
-                            color: '#374151' // gray-700
-                        },
+                        angleLines: { color: '#d1d5db' },
+                        grid: { color: '#e5e7eb' },
+                        pointLabels: { font: { size: 14, weight: 'bold' }, color: '#374151' },
                         ticks: {
                             backdropColor: 'rgba(255, 255, 255, 0.75)',
-                            color: '#4b5563', // gray-600
+                            color: '#4b5563',
                             stepSize: 2,
                             beginAtZero: true,
                             max: 10
@@ -416,12 +680,7 @@
                 plugins: {
                     legend: {
                         position: 'top',
-                        labels: {
-                            font: {
-                                size: 14
-                            },
-                            color: '#1f2937' // gray-800
-                        }
+                        labels: { font: { size: 14 }, color: '#1f2937' }
                     }
                 }
             };
@@ -433,11 +692,21 @@
             });
         }
 
-        // Application initialization
+        // --- Inițializarea aplicației ---
         document.addEventListener('DOMContentLoaded', () => {
-            // Show the "Home" section and create the chart on load
-            showSection('home', document.querySelector('.nav-button'));
-            createRadarChart();
+            // Determină limba inițială (cea salvată sau 'ro' ca implicit)
+            let preferredLang = 'ro';
+            try {
+                preferredLang = localStorage.getItem('preferredLang') || 'ro';
+            } catch (e) {
+                // localStorage e dezactivat
+            }
+            
+            // Setează limba la încărcare
+            setLanguage(preferredLang);
+            
+            // Setează secțiunea 'Acasă' ca fiind activă
+            showSection('acasa', document.querySelector('.nav-button'));
         });
     </script>
 
