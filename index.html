@@ -52,7 +52,7 @@
             display: inline;
         }
 
-        /* --- Modul Întunecat (Night) - Culoarea Textului Optimizată --- */
+        /* --- Modul Întunecat (Night) - Culorile CIAN sunt înlocuite cu ALB/GRI --- */
         body.dark-mode {
             background-color: #111827; /* bg-gray-900 (Foarte Întunecat) */
             color: #f3f4f6; /* text-gray-100 (Foarte Luminos pentru contrast maxim) */
@@ -63,11 +63,13 @@
             border-color: #4f46e5; /* border-indigo-600 */
         }
         
-        /* Titluri mari și subtitluri principale */
-        body.dark-mode header h1 { color: #93c5fd; /* blue-300 */ }
-        body.dark-mode header p { color: #a5b4fc; /* indigo-300 */ }
+        /* Titluri mari și subtitluri principale - Acum GRI/ALB */
+        body.dark-mode header h1 { color: #f3f4f6; /* Schimbat de la blue-300 la text-gray-100 */ }
+        body.dark-mode header p { color: #d1d5db; /* Schimbat de la indigo-300 la text-gray-300 */ }
+        
+        /* Titlurile secțiunilor (e.g. Profil Hibrid) și iconițele */
         body.dark-mode .text-blue-900 { color: #d1d5db; } /* Titlurile secțiunilor (mai deschise) */
-        body.dark-mode .text-indigo-600 { color: #818cf8; /* indigo-400 (pentru iconițe și subtitluri) */ }
+        body.dark-mode .text-indigo-600 { color: #d1d5db; /* Schimbat de la indigo-400 la text-gray-300 pentru iconițe și subtitluri */ }
         
         /* Navigare */
         body.dark-mode .nav-button {
@@ -92,8 +94,10 @@
             background-color: #374151;
             border-color: #4b5563;
         }
-        body.dark-mode .text-indigo-800 { color: #a5b4fc; } /* Titluri carduri de skill */
-        body.dark-mode .text-gray-700 { color: #d1d5db; } /* Text paragraf (schimbat de la #1f2937) */
+        /* Titluri carduri de skill și elemente de listă active */
+        body.dark-mode .text-indigo-800 { color: #f3f4f6; } /* Schimbat de la indigo-300 la text-gray-100 */
+        body.dark-mode .text-indigo-700 { color: #d1d5db; } /* Schimbat de la indigo-300 la text-gray-300 */
+        body.dark-mode .text-gray-700 { color: #d1d5db; } /* Text paragraf */
 
         /* Elemente diverse */
         body.dark-mode .timeline-dot { 
@@ -104,7 +108,7 @@
         }
         body.dark-mode .text-gray-500 { color: #9ca3af; } /* Date (un gri subtil) */
         body.dark-mode .text-gray-600 { color: #d1d5db; } /* Text footer */
-        body.dark-mode .text-indigo-700 { color: #a5b4fc; } /* Link-uri footer */
+
 
         /* General styles */
         .content-section {
@@ -393,7 +397,8 @@
                 <div class="main-card p-6 md:p-10 rounded-3xl shadow-2xl border-t-4 border-indigo-500">
                     <div class="flex items-center space-x-4 mb-6 text-indigo-600">
    
-                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 12c0 2.831.637 5.513 1.761 7.955a11.92 11.92 0 008.237 2.054 11.92 11.92 0 008.237-2.054C20.363 17.513 21 14.831 21 12a12.02 12.02 0 00-.382-3.04z"></path></svg>
+                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 12c0 2.831.637 5.513 1.761 7.955a11.92 11.92 0 008.237 2.054 11.92 11.92 0 008.237-2.054C20.363 17.513 21 14.831 21 12a12.02 12.02 
+                                0 00-.382-3.04z"></path></svg>
     
                         <h2 class="text-3xl md:text-4xl font-extrabold text-blue-900" data-key="skills_title">Competențe Tehnice și Cheie</h2>
                     </div>
@@ -848,8 +853,12 @@
                 skillsRadarChartInstance.destroy();
             }
 
-            const chartColor = isDarkMode ? 'rgba(147, 197, 253, 1)' : 'rgba(29, 78, 216, 1)';
-            const pointColor = isDarkMode ? '#93c5fd' : '#1d4ed8';
+            // Culoarea graficului este setată la ALB/GRI în modul întunecat (pentru a înlocui cianul)
+            const darkChartColor = 'rgba(243, 244, 246, 1)'; // text-gray-100 (#f3f4f6)
+            const darkPointColor = '#f3f4f6'; // text-gray-100
+
+            const chartColor = isDarkMode ? darkChartColor : 'rgba(29, 78, 216, 1)'; // Day Mode: Blue
+            const pointColor = isDarkMode ? darkPointColor : '#1d4ed8'; // Day Mode: Blue
             const gridColor = isDarkMode ? '#4b5563' : '#d1d5db';
             const tickColor = isDarkMode ? '#e5e7eb' : '#4b5563';
 
