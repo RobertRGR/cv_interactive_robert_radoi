@@ -131,14 +131,26 @@
             top: 2rem;
             right: 0;
             z-index: 10;
+            /* Modificare: trecem pe coloană */
             display: flex;
+            flex-direction: column;
+            align-items: flex-end; /* Aliniem elementele la dreapta */
         }
 
-        .lang-switcher, .dark-mode-toggle {
+        .lang-switcher {
             border-radius: 6px;
             overflow: hidden;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 0.5rem; /* Adăugăm spațiu sub el */
         }
+        
+        .dark-mode-toggle {
+            /* Stilam butonul ca un element de sine stătător */
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
 
         .lang-button {
             background-color: #e0e7ff;
@@ -156,12 +168,15 @@
             box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
         }
         
+        /* Modificări pentru noul buton de Dark Mode */
         .dark-mode-button {
-            margin-left: 0.75rem;
             background-color: #1d4ed8;
             color: white;
             padding: 0.5rem 0.75rem;
-            border-radius: 6px;
+            width: 100%; /* Ocupă lățimea containerului său */
+            display: flex;
+            align-items: center;
+            justify-content: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             transition: background-color 0.3s;
         }
@@ -182,21 +197,24 @@
     <div class="container mx-auto p-4 md:p-8 max-w-6xl relative">
 
         <!-- Controalele de Sus (Limbă și Mod Noapte) -->
-        <div class="top-controls flex items-center">
+        <div class="top-controls">
             
-            <!-- Buton Mod Noapte -->
-            <button id="darkModeToggle" class="dark-mode-button flex items-center" onclick="toggleDarkMode()">
-                <!-- Icon: Sun/Moon -->
-                <svg id="sunIcon" class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                <svg id="moonIcon" class="w-5 h-5 mr-1 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-                <span data-key="mode_toggle">Mod Noapte</span>
-            </button>
-
             <!-- Butoanele de Limbă -->
-            <div class="lang-switcher ml-4">
+            <div class="lang-switcher">
                 <button id="btn-ro" class="lang-button active" onclick="setLanguage('ro')">RO</button>
                 <button id="btn-en" class="lang-button" onclick="setLanguage('en')">EN</button>
             </div>
+            
+            <!-- Buton Mod Noapte (mutat sub lang-switcher) -->
+            <div class="dark-mode-toggle">
+                <button id="darkModeToggle" class="dark-mode-button" onclick="toggleDarkMode()">
+                    <!-- Icon: Sun/Moon -->
+                    <svg id="sunIcon" class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <svg id="moonIcon" class="w-5 h-5 mr-1 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                    <span data-key="mode_toggle">Mod Noapte</span>
+                </button>
+            </div>
+            
         </div>
 
         <!-- Antet și Titlu -->
@@ -501,6 +519,8 @@
                 'nav_certs': 'Certificări',
                 'nav_education': 'Educație',
                 'mode_toggle': 'Mod Noapte',
+                'day_mode': 'Mod Zi', // Adăugat pentru Day Mode
+                'night_mode': 'Mod Noapte', // Adăugat pentru Night Mode
                 'home_title': 'Profil Hibrid: Puntea dintre Client și Cod',
                 'home_p1': 'Sunt un profesionist QA motivat, cu experiență recentă în testarea funcțională a jocurilor. Dețin o înțelegere solidă a ciclului de viață al dezvoltării software (SDLC) și a metodologiilor de testare, inclusiv testarea funcțională, de regresie și de securitate. Ceea ce mă diferențiază este **profilul meu hibrid**: combin rigoarea tehnică a QA-ului cu experiența practică în operațiuni e-commerce și o înțelegere profundă a nevoilor clientului, dobândită în roluri de vânzări și management de produs.',
                 'home_p2': 'Acest grafic radar ilustrează modul în care competențele mele se întrepătrund, creând un profil unic, capabil să asigure calitatea nu doar din punct de vedere tehnic, ci și din perspectiva experienței utilizatorului final.',
@@ -597,6 +617,8 @@
                 'nav_certs': 'Certifications',
                 'nav_education': 'Education',
                 'mode_toggle': 'Night Mode',
+                'day_mode': 'Day Mode', // Adăugat pentru Day Mode
+                'night_mode': 'Night Mode', // Adăugat pentru Night Mode
                 'home_title': 'Hybrid Profile: The Bridge Between Client and Code',
                 'home_p1': 'I am a motivated QA professional with recent experience in functional game testing. I possess a solid understanding of the Software Development Life Cycle (SDLC) and testing methodologies, including functional, regression, and security testing. What sets me apart is my **hybrid profile**: I combine the technical rigor of QA with practical experience in e-commerce operations and a deep understanding of customer needs, gained in sales and product management roles.',
                 'home_p2': 'This radar chart illustrates how my competencies intersect, creating a unique profile capable of ensuring quality not only from a technical perspective but also from the end-user experience standpoint.',
@@ -707,11 +729,11 @@
             if (isDarkMode) {
                 sunIcon.classList.add('hidden');
                 moonIcon.classList.remove('hidden');
-                toggleText.innerHTML = langData[currentLang].mode_toggle; // Mod Noapte / Night Mode
+                toggleText.innerHTML = langData[currentLang].night_mode; // Mod Noapte / Night Mode
             } else {
                 sunIcon.classList.remove('hidden');
                 moonIcon.classList.add('hidden');
-                toggleText.innerHTML = currentLang === 'ro' ? 'Mod Zi' : 'Day Mode'; 
+                toggleText.innerHTML = langData[currentLang].day_mode; // Mod Zi / Day Mode
             }
             
             // Re-desenează graficul pentru a se ajusta la culorile noi
@@ -738,9 +760,9 @@
             // Actualizează Modul Noapte
             const toggleText = document.querySelector('#darkModeToggle span');
             if (isDarkMode) {
-                toggleText.innerHTML = langData[lang].mode_toggle;
+                toggleText.innerHTML = langData[lang].night_mode;
             } else {
-                toggleText.innerHTML = lang === 'ro' ? 'Mod Zi' : 'Day Mode';
+                toggleText.innerHTML = langData[lang].day_mode;
             }
 
 
@@ -751,7 +773,7 @@
             document.querySelectorAll('[data-key]').forEach(element => {
                 const key = element.getAttribute('data-key');
                 if (langData[lang][key]) {
-                    // Cazul special pentru butonul de telefon
+                    // Cazul special pentru butonul de telefon - actualizăm doar textul
                     if (key === 'footer_phone_btn') {
                         element.innerHTML = langData[lang][key];
                     } else if (key === 'footer_phone_number') {
@@ -914,8 +936,8 @@
                 isDarkMode = false; 
                 toggleDarkMode();
             } else {
-                 // Dacă nu e setat, asigură-te că textul butonului este "Mod Zi"
-                document.querySelector('#darkModeToggle span').innerHTML = preferredLang === 'ro' ? 'Mod Zi' : 'Day Mode';
+                 // Dacă nu e setat, asigură-te că textul butonului este corect
+                document.querySelector('#darkModeToggle span').innerHTML = langData[preferredLang].day_mode;
             }
 
             // Setează secțiunea 'Acasă' ca fiind activă
